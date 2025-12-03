@@ -1,7 +1,6 @@
 # AI Portfolio Optimization with NSGA-II
 
-This repository contains a complete, end-to-end implementation of a multi-objective portfolio optimization framework using the Non‑dominated Sorting Genetic Algorithm II (NSGA‑II). It focuses entirely on financial portfolio construction; there is currently no implemented project for green hydrogen or Differential Evolution in this repository.
-
+This repository contains a complete, end-to-end implementation of a multi-objective portfolio optimization framework using the Non‑dominated Sorting Genetic Algorithm II (NSGA‑II). It focuses entirely on financial portfolio construction
 ---
 
 ## Overview
