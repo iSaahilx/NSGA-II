@@ -1,151 +1,151 @@
-# AI Optimization Projects
+# AI Portfolio Optimization with NSGA-II
 
-This repository contains two AI-based optimization projects demonstrating evolutionary algorithms for real-world applications.
+This repository contains a complete, end-to-end implementation of a multi-objective portfolio optimization framework using the Non‑dominated Sorting Genetic Algorithm II (NSGA‑II). It focuses entirely on financial portfolio construction; there is currently no implemented project for green hydrogen or Differential Evolution in this repository.
 
 ---
 
-## Project 1: Portfolio Optimization using NSGA-II
+## Overview
 
-Multi-objective portfolio optimization using the Non-dominated Sorting Genetic Algorithm II (NSGA-II) to find optimal asset allocations balancing risk and return.
+The goal of this project is to construct equity portfolios that balance two competing objectives:
 
-### Overview
+- **Maximize expected portfolio return**
+- **Minimize portfolio risk**, measured by variance
 
-This project applies Pareto optimization principles to simultaneously:
-- **Maximize expected returns**
-- **Minimize portfolio risk** (measured by variance)
+Using NSGA‑II, the project generates a Pareto front of optimal portfolios where improving one objective necessarily worsens the other, giving investors a spectrum of efficient trade‑offs between risk and return.
 
-The portfolio comprises five stocks from India's Nifty 50 index using historical data from April 17, 2024 to April 17, 2025.
+The dataset consists of daily price data (April 17, 2024 to April 17, 2025) for five large‑cap Indian equities from the Nifty 50 index.
 
-### Stocks Analyzed
+---
 
-| Stock | Sector |
-|-------|--------|
-| TATASTEEL | Metals |
-| TITAN | Consumer Goods |
-| AXISBANK | Banking |
-| HDFCBANK | Banking |
-| BHARTIARTL | Telecom |
+## Data and Universe
 
-### Results
+The portfolio universe includes the following stocks, with price histories stored as CSV files in the repository:
 
-#### Pareto Front
-The Pareto front shows the trade-off between risk and return. Each point represents an optimal portfolio where improving one objective degrades the other.
+| Ticker      | Sector          |
+|------------|-----------------|
+| TATASTEEL  | Metals          |
+| TITAN      | Consumer Goods  |
+| AXISBANK   | Banking         |
+| HDFCBANK   | Banking         |
+| BHARTIARTL | Telecom         |
+
+From these series, the scripts compute daily returns, annualized expected returns, and the covariance matrix used in the optimization.
+
+---
+
+## NSGA‑II Optimization
+
+The NSGA‑II implementation searches over portfolio weight vectors subject to realistic constraints (such as full investment and no short selling) and evaluates each candidate by:
+
+- Computing the **expected portfolio return**
+- Computing the **portfolio variance (risk)**
+
+Key NSGA‑II steps implemented in the code:
+
+1. **Initialization** – Randomly generate a population of feasible portfolios (weight vectors).
+2. **Fitness evaluation** – Calculate return and risk for each portfolio.
+3. **Non‑dominated sorting** – Rank portfolios into Pareto fronts based on dominance.
+4. **Crowding distance calculation** – Maintain diversity along the front.
+5. **Selection, crossover, and mutation** – Create offspring portfolios and evolve the population.
+6. **Elitism** – Combine parent and offspring populations and retain the best individuals.
+
+The end result is an approximation of the efficient frontier in risk‑return space.
+
+---
+
+## Results and Visualizations
+
+### Pareto Front
+
+The file `pareto_front.png` shows the final Pareto front obtained from the NSGA‑II run. Each point corresponds to a non‑dominated portfolio characterized by its risk (x‑axis) and expected return (y‑axis).
 
 ![Pareto Front](pareto_front.png)
 
-#### Balanced Portfolio Allocation
-The balanced portfolio maximizes the Sharpe ratio, providing the best risk-adjusted returns.
+### Balanced Portfolio Allocation
+
+The chart `balanced_portfolio_pie.png` visualizes the asset weights of a selected “balanced” portfolio, typically chosen to maximize a risk‑adjusted performance metric such as the Sharpe ratio.
 
 ![Balanced Portfolio](balanced_portfolio_pie.png)
 
-### Key Portfolios Identified
+### Example Portfolio Types
 
-1. **Minimum Risk Portfolio** - Lowest volatility, conservative allocation
-2. **Maximum Return Portfolio** - Highest expected returns, aggressive allocation
-3. **Balanced Portfolio** - Highest Sharpe ratio, optimal risk-adjusted returns
+From the Pareto set, the analysis highlights:
 
-### How to Run
+1. **Minimum Risk Portfolio** – Lowest volatility, conservative allocation.
+2. **Maximum Return Portfolio** – Highest expected return, aggressive allocation.
+3. **Balanced Portfolio** – Best compromise between risk and return (highest Sharpe ratio in the study).
+
+These are explained in more detail in the accompanying report files.
+
+---
+
+## How to Run the Optimization
+
+### 1. Install Dependencies
 
 ```bash
-# Install dependencies
 pip install numpy pandas matplotlib deap
+```
 
-# Run the optimization
+### 2. Execute the Main Script
+
+```bash
 python nsga_ii_portfolio_final.py
 ```
 
-### Files
+This will:
+
+- Load the historical price data from the CSV files.
+- Run the NSGA‑II optimization loop.
+- Generate and save plots for the Pareto front and the chosen portfolio allocation.
+
+---
+
+## Repository Contents
 
 | File | Description |
 |------|-------------|
-| `nsga_ii_portfolio_final.py` | Main implementation |
-| `nsga_ii_portfolio.py` | Basic implementation |
-| `NSGA_II_FinancialReport.md` | Detailed methodology |
-| `Portfolio_Optimization_NSGA_II.md` | Theory documentation |
+| `nsga_ii_portfolio_final.py` | Main, fully featured NSGA‑II implementation for portfolio optimization. |
+| `nsga_ii_portfolio_fix.py`   | Refined/cleaned version of an earlier implementation. |
+| `nsga_ii_portfolio.py`       | Basic or experimental NSGA‑II version. |
+| `Portfolio_Optimization_NSGA_II.md` | Theory and algorithm documentation for NSGA‑II in a portfolio context. |
+| `NSGA_II_FinancialReport.md` | Detailed financial analysis and interpretation of results. |
+| `pareto_front.png`           | Risk–return Pareto front visualization. |
+| `balanced_portfolio_pie.png` | Pie chart of the selected balanced portfolio weights. |
+| `Quote-Equity-*.csv`         | Historical price data for each stock. |
+
+There is also a research paper PDF (`AIDA2_merged.pdf`) included as background reading on related optimization topics, but there is no implemented Differential Evolution/green hydrogen code in this repository.
 
 ---
-
-## Project 2: Green Hydrogen Production Optimization using Differential Evolution
-
-Optimization of electrolyser size for green hydrogen production coupled with offshore wind farms using the Differential Evolution (DE) algorithm.
-
-### Overview
-
-Based on the study by Dinh et al. (2025), this project demonstrates DE's application in minimizing the Levelised Cost of Hydrogen (LCOH₂) for offshore wind-powered electrolysis systems.
-
-### Problem Statement
-
-Optimize electrolyser capacity relative to a 600 MW offshore wind farm (OWF) to minimize hydrogen production costs while considering:
-- Variable wind speeds affecting energy availability
-- Capital costs (equipment, infrastructure)
-- Hydrogen production efficiency
-- Offshore vs. onshore configuration trade-offs
-
-### Differential Evolution Algorithm
-
-The DE algorithm iteratively optimizes electrolyser capacity through:
-
-1. **Initialization** - Generate population of candidate capacities
-2. **Mutation** - Create mutant vectors: `v = x_r1 + F × (x_r2 - x_r3)`
-3. **Crossover** - Combine mutant with parent using crossover probability
-4. **Selection** - Retain solution with lower LCOH₂
-5. **Iteration** - Repeat until convergence
-
-### Mathematical Models
-
-**Wind Speed Distribution (Weibull):**
-```
-f_w(k,C) = (k/C) × (v/C)^(k-1) × e^(-(v/C)^k)
-```
-
-**Levelised Cost of Hydrogen:**
-```
-LCOH₂ = Total Discounted Costs / Total Hydrogen Production
-```
-
-### Key Results
-
-| Configuration | Optimal Capacity | LCOH₂ | H₂ Production |
-|--------------|------------------|-------|---------------|
-| Offshore-EL | 91.41% (548.46 MW) | €3.79/kg | 57.55 kt/year |
-| Onshore-EL | 94.54% (567.24 MW) | €4.29/kg | 55.5 kt/year |
-
-### Why DE Over Other Methods?
-
-- Handles non-linear, non-differentiable objective functions
-- Avoids local optima through population diversity
-- Efficient for multi-parameter optimization problems
-
----
-
-## Requirements
-
-```bash
-pip install numpy pandas matplotlib deap
-```
 
 ## Project Structure
 
-```
+```text
 AI_proj/
-├── nsga_ii_portfolio_final.py    # NSGA-II implementation
-├── nsga_ii_portfolio.py          # Basic NSGA-II
-├── nsga_ii_portfolio_fix.py      # Fixed version
-├── NSGA_II_FinancialReport.md    # Financial report
-├── Portfolio_Optimization_NSGA_II.md  # Theory doc
-├── AIDA2_merged.pdf              # DE research paper
-├── pareto_front.png              # Pareto front visualization
-├── balanced_portfolio_pie.png    # Portfolio allocation chart
-└── Quote-Equity-*.csv            # Stock data files
+├── nsga_ii_portfolio_final.py
+├── nsga_ii_portfolio_fix.py
+├── nsga_ii_portfolio.py
+├── NSGA_II_FinancialReport.md
+├── Portfolio_Optimization_NSGA_II.md
+├── pareto_front.png
+├── balanced_portfolio_pie.png
+├── Quote-Equity-AXISBANK-*.csv
+├── Quote-Equity-BHARTIARTL-*.csv
+├── Quote-Equity-HDFCBANK-*.csv
+├── Quote-Equity-TATASTEEL-*.csv
+├── Quote-Equity-TITAN-*.csv
+└── README.md
 ```
 
+---
 
 ## References
 
 1. Markowitz, H. (1952). Portfolio Selection. The Journal of Finance.
-2. Deb, K., et al. (2002). A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II.
-3. Dinh, et al. (2025). Optimizing Electrolyser Size for Green Hydrogen Production Using Differential Evolution. International Journal of Hydrogen Energy.
+2. Deb, K., Pratap, A., Agarwal, S., & Meyarivan, T. (2002). A Fast and Elitist Multiobjective Genetic Algorithm: NSGA‑II. IEEE Transactions on Evolutionary Computation.
+
+---
 
 ## License
 
-This project is provided for educational purposes only.
+This project is provided for educational and research purposes only.
