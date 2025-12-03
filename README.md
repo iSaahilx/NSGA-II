@@ -1,54 +1,99 @@
-# AI Portfolio Optimization with NSGA-II
+## AI Portfolio Optimization with NSGA-II
 
-This repository contains a complete, end-to-end implementation of a multi-objective portfolio optimization framework using the Non‑dominated Sorting Genetic Algorithm II (NSGA‑II). It focuses entirely on financial portfolio construction
+This repository implements a complete multi-objective portfolio optimization workflow using the Non‑dominated Sorting Genetic Algorithm II (NSGA‑II).  
+It reproduces and extends the analysis described in the project report *“Pareto Optimization for Portfolio Management Using NSGA‑II”* [`NSGA_II_FinancialReport.pdf`](file:///e%3A/Projects/AI_proj_git/NSGA_II_FinancialReport.pdf), turning the methodology into fully runnable, well-documented Python code.
+
 ---
 
 ## Overview
 
-The goal of this project is to construct equity portfolios that balance two competing objectives:
+The project constructs equity portfolios that balance two conflicting objectives:
 
-- **Maximize expected portfolio return**
-- **Minimize portfolio risk**, measured by variance
+- **Maximize expected portfolio return** \(based on historical daily returns\)
+- **Minimize portfolio risk** \(portfolio variance\)
 
-Using NSGA‑II, the project generates a Pareto front of optimal portfolios where improving one objective necessarily worsens the other, giving investors a spectrum of efficient trade‑offs between risk and return.
+Rather than outputting a single “best” portfolio, NSGA‑II generates a **Pareto front** of non‑dominated solutions.  
+Each point on this front represents an efficient trade‑off where any improvement in return requires accepting higher risk, and vice versa.
 
-The dataset consists of daily price data (April 17, 2024 to April 17, 2025) for five large‑cap Indian equities from the Nifty 50 index.
-
----
-
-## Data and Universe
-
-The portfolio universe includes the following stocks, with price histories stored as CSV files in the repository:
-
-| Ticker      | Sector          |
-|------------|-----------------|
-| TATASTEEL  | Metals          |
-| TITAN      | Consumer Goods  |
-| AXISBANK   | Banking         |
-| HDFCBANK   | Banking         |
-| BHARTIARTL | Telecom         |
-
-From these series, the scripts compute daily returns, annualized expected returns, and the covariance matrix used in the optimization.
+The study uses one year of daily data (17 April 2024 – 17 April 2025) for five large‑cap Nifty 50 constituents, as detailed in the report [`NSGA_II_FinancialReport.pdf`](file:///e%3A/Projects/AI_proj_git/NSGA_II_FinancialReport.pdf).
 
 ---
 
-## NSGA‑II Optimization
+## Data and Investment Universe
 
-The NSGA‑II implementation searches over portfolio weight vectors subject to realistic constraints (such as full investment and no short selling) and evaluates each candidate by:
+The portfolio universe consists of the following stocks, with cleaned NSE price histories stored as CSV files:
 
-- Computing the **expected portfolio return**
-- Computing the **portfolio variance (risk)**
+| Ticker      | Company        | Sector          |
+|------------|----------------|-----------------|
+| TATASTEEL  | Tata Steel     | Metals          |
+| TITAN      | Titan Company  | Consumer Goods  |
+| AXISBANK   | Axis Bank      | Banking         |
+| HDFCBANK   | HDFC Bank      | Banking         |
+| BHARTIARTL | Bharti Airtel  | Telecom         |
 
-Key NSGA‑II steps implemented in the code:
+From these series the code computes:
 
-1. **Initialization** – Randomly generate a population of feasible portfolios (weight vectors).
-2. **Fitness evaluation** – Calculate return and risk for each portfolio.
-3. **Non‑dominated sorting** – Rank portfolios into Pareto fronts based on dominance.
-4. **Crowding distance calculation** – Maintain diversity along the front.
-5. **Selection, crossover, and mutation** – Create offspring portfolios and evolve the population.
-6. **Elitism** – Combine parent and offspring populations and retain the best individuals.
+- Daily log returns  
+- Expected annual returns (assuming 252 trading days)  
+- The \(5 \times 5\) covariance matrix of returns, used in risk calculations  
 
-The end result is an approximation of the efficient frontier in risk‑return space.
+Key statistical findings from the report include:
+
+- **Highest expected returns**: BHARTIARTL and HDFCBANK  
+- **Negative expected returns in this window**: TATASTEEL and TITAN  
+- **Highest individual variance**: TATASTEEL  
+
+These properties strongly influence optimal weights in the final portfolios [`NSGA_II_FinancialReport.pdf`](file:///e%3A/Projects/AI_proj_git/NSGA_II_FinancialReport.pdf).
+
+---
+
+## Optimization Formulation
+
+Let \(w_i\) denote the weight of asset \(i\) in a portfolio of \(n = 5\) assets.
+
+- **Objective 1 – Maximize expected return**
+
+\\[
+E(R_p) = \sum_{i=1}^{n} w_i \, E(R_i)
+\\]
+
+- **Objective 2 – Minimize portfolio variance**
+
+\\[
+\sigma_p^2 = \sum_{i=1}^{n} \sum_{j=1}^{n} w_i w_j \sigma_{ij}
+\\]
+
+Subject to:
+
+- **Full investment**: \\(\sum_{i=1}^{n} w_i = 1\\)  
+- **No short selling**: \\(w_i \ge 0\\) for all \(i\)
+
+This leads to a classic bi‑objective portfolio problem where NSGA‑II searches directly in weight space under these constraints.
+
+---
+
+## NSGA‑II Implementation
+
+The implementation uses the DEAP evolutionary computation library and closely follows the configuration described in the report:
+
+- **Population size**: 100 portfolios  
+- **Generations**: 100  
+- **Crossover**: Blend crossover (BLX‑α with α = 0.5), probability 0.9  
+- **Mutation**: Gaussian mutation (mean 0, std 0.1), probability 0.1  
+- **Selection**: `tools.selNSGA2` with elitism and crowding distance  
+
+Chromosomes are length‑5 real‑valued vectors representing raw weights.  
+Constraint handling is enforced after genetic operations:
+
+1. Clip negative weights to 0.  
+2. Renormalize so that weights sum to 1.  
+
+Fitness evaluation returns a two‑element tuple:
+
+- \(f_1 = -E(R_p)\) (minimized to maximize return)  
+- \(f_2 = \sigma_p^2\) (portfolio variance)  
+
+This design exactly matches the mathematical formulation and ensures compatibility with NSGA‑II’s dominance comparisons, as explained in [`NSGA_II_FinancialReport.pdf`](file:///e%3A/Projects/AI_proj_git/NSGA_II_FinancialReport.pdf).
 
 ---
 
@@ -56,25 +101,40 @@ The end result is an approximation of the efficient frontier in risk‑return sp
 
 ### Pareto Front
 
-The file `pareto_front.png` shows the final Pareto front obtained from the NSGA‑II run. Each point corresponds to a non‑dominated portfolio characterized by its risk (x‑axis) and expected return (y‑axis).
+The file `pareto_front.png` shows the final Pareto front in risk–return space.  
+Each point corresponds to a non‑dominated portfolio with its own allocation across the five assets.
 
 ![Pareto Front](pareto_front.png)
 
+The front exhibits the expected upward‑sloping shape: portfolios with higher expected returns carry higher variance, confirming the risk–return trade‑off observed in the report.
+
 ### Balanced Portfolio Allocation
 
-The chart `balanced_portfolio_pie.png` visualizes the asset weights of a selected “balanced” portfolio, typically chosen to maximize a risk‑adjusted performance metric such as the Sharpe ratio.
+The chart `balanced_portfolio_pie.png` visualizes the allocation of the selected **balanced portfolio**, defined as the portfolio with the highest Sharpe ratio (assuming risk‑free rate 0).
 
 ![Balanced Portfolio](balanced_portfolio_pie.png)
 
-### Example Portfolio Types
+The report shows that this portfolio heavily weights HDFCBANK and BHARTIARTL, with modest exposure to AXISBANK and minimal or zero allocation to the lower‑return stocks TATASTEEL and TITAN [`NSGA_II_FinancialReport.pdf`](file:///e%3A/Projects/AI_proj_git/NSGA_II_FinancialReport.pdf).
 
-From the Pareto set, the analysis highlights:
+### Highlighted Portfolios
 
-1. **Minimum Risk Portfolio** – Lowest volatility, conservative allocation.
-2. **Maximum Return Portfolio** – Highest expected return, aggressive allocation.
-3. **Balanced Portfolio** – Best compromise between risk and return (highest Sharpe ratio in the study).
+The analysis identifies three representative portfolios on the Pareto front:
 
-These are explained in more detail in the accompanying report files.
+1. **Minimum Risk Portfolio**  
+   - Strong diversification across HDFCBANK, BHARTIARTL, and TITAN  
+   - Very small allocations to TATASTEEL and AXISBANK  
+   - Lowest variance, suitable for highly risk‑averse investors  
+
+2. **Maximum Return Portfolio**  
+   - Dominated by BHARTIARTL and HDFCBANK  
+   - Negligible or zero allocation to the negative‑return assets  
+   - Highest expected annual return but also higher variance  
+
+3. **Balanced (Maximum Sharpe) Portfolio**  
+   - Same composition as the maximum‑return portfolio in this dataset  
+   - Achieves the best risk‑adjusted performance (Sharpe ratio ≈ 10.5)  
+
+Detailed numerical results and tables for these portfolios are provided in [`NSGA_II_FinancialReport.pdf`](file:///e%3A/Projects/AI_proj_git/NSGA_II_FinancialReport.pdf).
 
 ---
 
@@ -94,9 +154,12 @@ python nsga_ii_portfolio_final.py
 
 This will:
 
-- Load the historical price data from the CSV files.
-- Run the NSGA‑II optimization loop.
-- Generate and save plots for the Pareto front and the chosen portfolio allocation.
+- Load the historical price data from the `Quote-Equity-*.csv` files  
+- Construct return and covariance matrices  
+- Run the NSGA‑II optimization loop  
+- Save visualizations for the Pareto front and the chosen balanced portfolio  
+
+You can modify parameters such as population size, number of generations, and risk‑return preferences directly in `nsga_ii_portfolio_final.py`.
 
 ---
 
@@ -104,16 +167,14 @@ This will:
 
 | File | Description |
 |------|-------------|
-| `nsga_ii_portfolio_final.py` | Main, fully featured NSGA‑II implementation for portfolio optimization. |
-| `nsga_ii_portfolio_fix.py`   | Refined/cleaned version of an earlier implementation. |
-| `nsga_ii_portfolio.py`       | Basic or experimental NSGA‑II version. |
-| `Portfolio_Optimization_NSGA_II.md` | Theory and algorithm documentation for NSGA‑II in a portfolio context. |
-| `NSGA_II_FinancialReport.md` | Detailed financial analysis and interpretation of results. |
-| `pareto_front.png`           | Risk–return Pareto front visualization. |
-| `balanced_portfolio_pie.png` | Pie chart of the selected balanced portfolio weights. |
-| `Quote-Equity-*.csv`         | Historical price data for each stock. |
-
-There is also a research paper PDF (`AIDA2_merged.pdf`) included as background reading on related optimization topics, but there is no implemented Differential Evolution/green hydrogen code in this repository.
+| `nsga_ii_portfolio_final.py` | Main NSGA‑II implementation used for experiments and figures. |
+| `nsga_ii_portfolio_fix.py`   | Refined/cleaned version of an earlier prototype. |
+| `nsga_ii_portfolio.py`       | Initial/basic NSGA‑II implementation. |
+| `Portfolio_Optimization_NSGA_II.md` | Theory and algorithm overview for NSGA‑II in portfolio management. |
+| `NSGA_II_FinancialReport.pdf` | Full academic-style report with methodology, statistics, and detailed results. |
+| `pareto_front.png`           | Visualization of the final Pareto front. |
+| `balanced_portfolio_pie.png` | Allocation chart for the balanced (maximum Sharpe) portfolio. |
+| `Quote-Equity-*.csv`         | Cleaned price data for the five Nifty 50 stocks. |
 
 ---
 
@@ -124,7 +185,7 @@ AI_proj/
 ├── nsga_ii_portfolio_final.py
 ├── nsga_ii_portfolio_fix.py
 ├── nsga_ii_portfolio.py
-├── NSGA_II_FinancialReport.md
+├── NSGA_II_FinancialReport.pdf
 ├── Portfolio_Optimization_NSGA_II.md
 ├── pareto_front.png
 ├── balanced_portfolio_pie.png
@@ -140,8 +201,9 @@ AI_proj/
 
 ## References
 
-1. Markowitz, H. (1952). Portfolio Selection. The Journal of Finance.
-2. Deb, K., Pratap, A., Agarwal, S., & Meyarivan, T. (2002). A Fast and Elitist Multiobjective Genetic Algorithm: NSGA‑II. IEEE Transactions on Evolutionary Computation.
+1. Markowitz, H. (1952). *Portfolio Selection*. The Journal of Finance.  
+2. Deb, K., Pratap, A., Agarwal, S., & Meyarivan, T. (2002). *A Fast and Elitist Multiobjective Genetic Algorithm: NSGA‑II*. IEEE Transactions on Evolutionary Computation.  
+3. Saahil Ahmad, Md Rameez Haider, Ramjan Khandelwal. *Pareto Optimization for Portfolio Management Using NSGA‑II* [`NSGA_II_FinancialReport.pdf`](file:///e%3A/Projects/AI_proj_git/NSGA_II_FinancialReport.pdf).
 
 ---
 
