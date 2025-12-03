@@ -139,15 +139,6 @@ AI_proj/
 └── Quote-Equity-*.csv            # Stock data files
 ```
 
-## Authors
-
-- Nia Sanjeev (22BRS1205)
-- Aditya Shaw (22BRS1145)
-
-School of Computer Science and Engineering, Vellore Institute of Technology, Chennai
-
-**Course:** BCSE306L - Artificial Intelligence  
-**Instructor:** Dr. Suganya G.
 
 ## References
 
